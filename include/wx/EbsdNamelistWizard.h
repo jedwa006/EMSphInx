@@ -141,7 +141,7 @@ class EbsdNamelistWizard : public ValidityWizard
 			}
 		}
 
-		void PatternFileChanged(wxFileDirPickerEvent& event) {
+		void PatternFileChanged(wxCommandEvent& event) {
 			//search for associated scan file and use to populate subsequent pages
 			nml.patFile = m_patLoadPan->getFile().ToStdString();
 			nml.patName = m_patLoadPan->getAux();
@@ -213,11 +213,11 @@ ValidityWizard( parent, id, title, pos )
 	}
 	m_mastPatSelPan->setLibrary(masterLib);
 
-	m_patLoadPan->Connect( wxEVT_COMMAND_FILEPICKER_CHANGED, wxFileDirPickerEventHandler( EbsdNamelistWizard::PatternFileChanged ), NULL, this );
+	m_patLoadPan->Connect( wxEVT_COMMAND_TEXT_UPDATED, wxCommandEventHandler( EbsdNamelistWizard::PatternFileChanged ), NULL, this );
 }
 
 EbsdNamelistWizard::~EbsdNamelistWizard() {
-	m_patLoadPan->Disconnect( wxEVT_COMMAND_FILEPICKER_CHANGED, wxFileDirPickerEventHandler( EbsdNamelistWizard::PatternFileChanged ), NULL, this );
+	m_patLoadPan->Disconnect( wxEVT_COMMAND_TEXT_UPDATED, wxCommandEventHandler( EbsdNamelistWizard::PatternFileChanged ), NULL, this );
 
 	//save known master patterns to config file
 	std::vector<wxString> masterLib = m_mastPatSelPan->getLibrary();

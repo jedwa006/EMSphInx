@@ -38,7 +38,7 @@
 #include <wx/artprov.h>
 #include <wx/xrc/xmlres.h>
 #include <wx/string.h>
-#include <wx/filepicker.h>
+#include <wx/filedlg.h>
 #include <wx/gdicmn.h>
 #include <wx/font.h>
 #include <wx/colour.h>
@@ -65,7 +65,8 @@
 /// Class PatternLoadPanelBase
 ///////////////////////////////////////////////////////////////////////////////
 class PatternLoadPanelBase : public ValidityPanel {
-		wxFilePickerCtrl* m_filePicker;
+		wxTextCtrl      * m_fileText  ;
+		wxButton        * m_btnBrowse ;
 		wxTextCtrl      * m_txtW      ;
 		wxTextCtrl      * m_txtH      ;
 		wxTextCtrl      * m_txtBit    ;
@@ -84,8 +85,11 @@ class PatternLoadPanelBase : public ValidityPanel {
 
 	protected:
 
+		// Browse button handler — opens wxFileDialog using top-level parent to avoid macOS Cocoa modal loop bug
+		void BrowseClicked( wxCommandEvent& event );
+
 		// Virtual event handlers, overide them in your derived class
-		virtual void FileChanged( wxFileDirPickerEvent& event ) { testValid(); event.Skip(); }
+		virtual void FileChanged( wxCommandEvent& event ) { testValid(); event.Skip(); }
 		virtual void WidthChanged( wxCommandEvent& event ) { testValid(); event.Skip(); }
 		virtual void HeightChanged( wxCommandEvent& event ) { testValid(); event.Skip(); }
 		virtual void NumPrvChanged( wxCommandEvent& event ) { testValid(); event.Skip(); }
@@ -101,7 +105,7 @@ class PatternLoadPanelBase : public ValidityPanel {
 
 		bool getIqChecked() const {return m_checkIq->IsChecked();}
 
-		void SetFileName(wxFileName fn) {m_filePicker->SetFileName(fn);}
+		void SetFileName(wxFileName fn) {m_fileText->SetValue(fn.GetFullPath());}
 
 	public:
 
@@ -123,7 +127,7 @@ class PatternLoadPanelBase : public ValidityPanel {
 		}
 
 		//@brief: get values from editable fields
-		wxString getFile() const {return m_filePicker->GetPath();}
+		wxString getFile() const {return m_fileText->GetValue();}
 		long     getW   () const {long v; m_txtW     ->GetLineText(0).ToLong(&v); return v;}
 		long     getH   () const {long v; m_txtH     ->GetLineText(0).ToLong(&v); return v;}
 		long     getBit () const {long v; m_txtBit   ->GetLineText(0).ToLong(&v); return v;}
@@ -141,7 +145,7 @@ class PatternLoadPanelBase : public ValidityPanel {
 		bool hasNreg() const {return !m_txtNReg  ->GetLineText(0).IsEmpty();}
 
 		//@brief: set values of text fields
-		void ClearFile() {wxFileName fn; m_filePicker->SetFileName(fn);}
+		void ClearFile() {m_fileText->Clear();}
 		void setW   (int  w) {m_txtW     ->Clear(); m_txtW       ->operator<<(w);}
 		void setH   (int  h) {m_txtH     ->Clear(); m_txtH       ->operator<<(h);}
 		void setBit (int  b) {m_txtBit   ->Clear(); m_txtBit     ->operator<<(b);}
@@ -168,8 +172,8 @@ class PatternLoadPanel : public PatternLoadPanelBase {
 	protected:
 
 		//make sure file is valid when changed
-		void FileChanged( wxFileDirPickerEvent& event );
-		void NumPrvChanged( wxFileDirPickerEvent& event ) {InavlidateImages(); event.Skip();}
+		void FileChanged( wxCommandEvent& event );
+		void NumPrvChanged( wxCommandEvent& event ) {InavlidateImages(); event.Skip();}
 
 		//update pattern number estimate if width/height aren't known from file
 		void WidthChanged( wxCommandEvent& event ) {DimChanged();}
@@ -189,7 +193,7 @@ class PatternLoadPanel : public PatternLoadPanelBase {
 		bool validFile() const {return wxFileExists(getFile());}
 		std::string getAux() const {return aux;}
 		void setAux(std::string a) {aux = a;}
-		void SetFile(wxFileName fn) {SetFileName(fn); wxFileDirPickerEvent evt; FileChanged(evt);}
+		void SetFile(wxFileName fn) {SetFileName(fn); wxCommandEvent evt; FileChanged(evt);}
 		
 };
 
@@ -269,10 +273,13 @@ PatternLoadPanelBase::PatternLoadPanelBase( wxWindow* parent, wxWindowID id, con
 	valCirc  .SetRange(-1, 4096);
 	valAhe   .SetRange( 0, 32  );
 
-	//build elements for pattern file box and assemble
-	wxString wildCards = wxT("EBSD Pattern Files (*.h5, *.upx, *.ebsp, or *.data)|*.h5;*.hdf;*.hdf5;*.up1;*.up2;*.ebsp;*.data");
-	m_filePicker = new wxFilePickerCtrl( sbPatFile->GetStaticBox(), wxID_ANY, wxEmptyString, wxT("Select a file"), wildCards, wxDefaultPosition, wxDefaultSize, wxFLP_DEFAULT_STYLE|wxFLP_SMALL );
-	sbPatFile->Add( m_filePicker, 1, wxALL|wxEXPAND, 5 );
+	//build elements for pattern file box and assemble (manual text+button to avoid wxFilePickerCtrl/NSOpenPanel modal bug on macOS)
+	wxBoxSizer* hFileBox = new wxBoxSizer( wxHORIZONTAL );
+	m_fileText  = new wxTextCtrl( sbPatFile->GetStaticBox(), wxID_ANY, wxEmptyString, wxDefaultPosition, wxDefaultSize, wxTE_PROCESS_ENTER );
+	m_btnBrowse = new wxButton  ( sbPatFile->GetStaticBox(), wxID_ANY, wxT("..."), wxDefaultPosition, wxSize(40,-1), 0 );
+	hFileBox->Add( m_fileText , 1, wxALL|wxALIGN_CENTER_VERTICAL, 2 );
+	hFileBox->Add( m_btnBrowse, 0, wxALL|wxALIGN_CENTER_VERTICAL, 2 );
+	sbPatFile->Add( hFileBox, 1, wxALL|wxEXPAND, 5 );
 
 	//build elements for pattern info box
 	m_txtW   = new wxTextCtrl( sbPatInfo->GetStaticBox(), wxID_ANY, wxT(""       ), wxDefaultPosition, wxDefaultSize, wxTE_CENTER              , valSize );
@@ -357,7 +364,9 @@ PatternLoadPanelBase::PatternLoadPanelBase( wxWindow* parent, wxWindowID id, con
 	this->Layout();
 
 	// Connect Events
-	m_filePicker->Connect( wxEVT_COMMAND_FILEPICKER_CHANGED, wxFileDirPickerEventHandler( PatternLoadPanelBase::FileChanged   ), NULL, this );
+	m_btnBrowse ->Connect( wxEVT_COMMAND_BUTTON_CLICKED    , wxCommandEventHandler      ( PatternLoadPanelBase::BrowseClicked ), NULL, this );
+	m_fileText  ->Connect( wxEVT_COMMAND_TEXT_ENTER        , wxCommandEventHandler      ( PatternLoadPanelBase::FileChanged   ), NULL, this );
+	m_fileText  ->Connect( wxEVT_COMMAND_TEXT_UPDATED      , wxCommandEventHandler      ( PatternLoadPanelBase::FileChanged   ), NULL, this );
 	m_txtW      ->Connect( wxEVT_COMMAND_TEXT_UPDATED      , wxCommandEventHandler      ( PatternLoadPanelBase::WidthChanged  ), NULL, this );
 	m_txtH      ->Connect( wxEVT_COMMAND_TEXT_UPDATED      , wxCommandEventHandler      ( PatternLoadPanelBase::HeightChanged ), NULL, this );
 	m_txtPrvCnt ->Connect( wxEVT_COMMAND_TEXT_UPDATED      , wxCommandEventHandler      ( PatternLoadPanelBase::NumPrvChanged ), NULL, this );
@@ -369,7 +378,9 @@ PatternLoadPanelBase::PatternLoadPanelBase( wxWindow* parent, wxWindowID id, con
 
 PatternLoadPanelBase::~PatternLoadPanelBase() {
 	// Disconnect Events
-	m_filePicker->Disconnect( wxEVT_COMMAND_FILEPICKER_CHANGED, wxFileDirPickerEventHandler( PatternLoadPanelBase::FileChanged   ), NULL, this );
+	m_btnBrowse ->Disconnect( wxEVT_COMMAND_BUTTON_CLICKED    , wxCommandEventHandler      ( PatternLoadPanelBase::BrowseClicked ), NULL, this );
+	m_fileText  ->Disconnect( wxEVT_COMMAND_TEXT_ENTER        , wxCommandEventHandler      ( PatternLoadPanelBase::FileChanged   ), NULL, this );
+	m_fileText  ->Disconnect( wxEVT_COMMAND_TEXT_UPDATED      , wxCommandEventHandler      ( PatternLoadPanelBase::FileChanged   ), NULL, this );
 	m_txtW      ->Disconnect( wxEVT_COMMAND_TEXT_UPDATED      , wxCommandEventHandler      ( PatternLoadPanelBase::WidthChanged  ), NULL, this );
 	m_txtH      ->Disconnect( wxEVT_COMMAND_TEXT_UPDATED      , wxCommandEventHandler      ( PatternLoadPanelBase::HeightChanged ), NULL, this );
 	m_txtPrvCnt ->Disconnect( wxEVT_COMMAND_TEXT_UPDATED      , wxCommandEventHandler      ( PatternLoadPanelBase::NumPrvChanged ), NULL, this );
@@ -378,6 +389,16 @@ PatternLoadPanelBase::~PatternLoadPanelBase() {
 	m_mskRad    ->Disconnect( wxEVT_COMMAND_TEXT_UPDATED      , wxCommandEventHandler      ( PatternLoadPanelBase::CircChanged   ), NULL, this );
 	m_txtNReg   ->Disconnect( wxEVT_COMMAND_TEXT_UPDATED      , wxCommandEventHandler      ( PatternLoadPanelBase::AheChanged    ), NULL, this );
 
+}
+
+void PatternLoadPanelBase::BrowseClicked( wxCommandEvent& event ) {
+	wxString wildCards = wxT("EBSD Pattern Files (*.h5, *.upx, *.ebsp, or *.data)|*.h5;*.hdf;*.hdf5;*.up1;*.up2;*.ebsp;*.data");
+	// Use GetTopLevelParent() as dialog parent to avoid macOS Cocoa NSOpenPanel modal loop bug
+	// (wxGenericFileButton/wxFilePickerCtrl breaks inside nested widget hierarchies on macOS Tahoe)
+	wxFileDialog dlg(wxGetTopLevelParent(this), wxT("Select a file"), wxEmptyString, wxEmptyString, wildCards, wxFD_OPEN|wxFD_FILE_MUST_EXIST);
+	if(dlg.ShowModal() == wxID_OK) {
+		m_fileText->SetValue(dlg.GetPath());
+	}
 }
 
 ////////////////////////////////////////////////////////////////////
@@ -408,7 +429,7 @@ void PatternLoadPanel::DimChanged() {
 
 #include "modality/ebsd/pattern.hpp"
 
-void PatternLoadPanel::FileChanged( wxFileDirPickerEvent& event ) {
+void PatternLoadPanel::FileChanged( wxCommandEvent& event ) {
 	EnablePrv(false);
 	InavlidateImages();
 	ClearInfo();
