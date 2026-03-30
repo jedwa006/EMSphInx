@@ -62,6 +62,14 @@ if(${EMSPHINX_BUILD_GUIS})
 	set_target_properties(EMSphInxEBSD PROPERTIES
         MACOSX_BUNDLE_INFO_PLIST ${CMAKE_CURRENT_LIST_DIR}/MacOSXBundleInfo.plist.in)
 	install(TARGETS EMSphInxEBSD COMPONENT gui BUNDLE DESTINATION .) # command line tools
+
+	# Ad-hoc codesign with entitlements so NSOpenPanel/NSSavePanel work when launched from Finder
+	if(APPLE)
+		add_custom_command(TARGET EMSphInxEBSD POST_BUILD
+			COMMAND codesign --force --sign - --entitlements ${CMAKE_CURRENT_LIST_DIR}/EMSphInxEBSD.entitlements $<TARGET_BUNDLE_DIR:EMSphInxEBSD>
+			COMMENT "Ad-hoc codesigning EMSphInxEBSD.app with file access entitlements"
+		)
+	endif()
 endif()
 
 ################################
