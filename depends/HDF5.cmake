@@ -57,7 +57,7 @@ if(EMSPHINX_BUILD_HDF5)
 	ExternalProject_add(hdf5 PREFIX hdf5 GIT_REPOSITORY ${HDF5_URL} GIT_TAG ${HDF5_VERS} GIT_SHALLOW TRUE
 		# UPDATE_DISCONNECTED 1 # this should keep the cmake from trying to repull from the repo every time make is run but doesn't...
 		UPDATE_COMMAND "" # this does keep cmake from redoing everythin on every make but means that if you change HDF5_VERS it won't automatically pull and build the new one
-		CMAKE_ARGS ${HDF5_OPTIONS} -DCMAKE_INSTALL_PREFIX=${HDF5_BUILD_DIR}/install
+		CMAKE_ARGS ${HDF5_OPTIONS} -DCMAKE_INSTALL_PREFIX=${HDF5_BUILD_DIR}/install -DCMAKE_POLICY_VERSION_MINIMUM=3.5
 		BUILD_COMMAND ${CMAKE_COMMAND} --build . --parallel ${NCORES}
 	)
 	if(EMSPHINX_BUILD_SHARED) # copy shared library to binary directory if needed

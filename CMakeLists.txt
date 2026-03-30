@@ -32,9 +32,8 @@
 #                                                                     #
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
 
+cmake_minimum_required(VERSION 3.14...3.31) # must come before project() for CMake 4.x; version range for compat
 project(EMSphInx)
-# cmake_minimum_required(VERSION 3.12) # 3.12 for the parallel option for cmake --build
-cmake_minimum_required(VERSION 3.14) # for FetchContent_MakeAvailable (could fall back to 3.12 with alternate pattern but it is now deprecated)
 
 set(CMAKE_CXX_STANDARD 11) # apparently you still need to explicitly request 2011 conformance in 2019...
 

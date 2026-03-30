@@ -47,7 +47,7 @@ if(EMSPHINX_BUILD_wxWidgets)
 	FetchContent_Declare(
 		wxWidgets
 		GIT_REPOSITORY "https://github.com/wxWidgets/wxWidgets"
-		GIT_TAG        "v3.1.2"
+		GIT_TAG        "v3.2.6"
 		GIT_PROGRESS   TRUE
 		GIT_SHALLOW    TRUE
 	)
@@ -82,11 +82,13 @@ if(EMSPHINX_BUILD_wxWidgets)
 		set(wxUSE_LIBSDL OFF CACHE BOOL "Use SDL for wxSound implementation.")
 	endif()
 
+	set(CMAKE_POLICY_VERSION_MINIMUM 3.5 CACHE STRING "" FORCE) # wxWidgets 3.2.x has old cmake_minimum_required
 	FetchContent_MakeAvailable(wxWidgets)
+	unset(CMAKE_POLICY_VERSION_MINIMUM CACHE) # restore after wxWidgets config
 
 else(EMSPHINX_BUILD_wxWidgets)
 	# SET(wxWidgets_ROOT_DIR <wxWidgets Directory>)
 	# SET(wxWidgets_CONFIGURATION mswud)
-	find_package(WxWidgets COMPONENTS core base propgrid REQUIRED)
+	find_package(wxWidgets COMPONENTS core base propgrid html REQUIRED)
 	include(${wxWidgets_USE_FILE})
 endif(EMSPHINX_BUILD_wxWidgets)

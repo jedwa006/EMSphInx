@@ -67,7 +67,7 @@ if(EMSPHINX_BUILD_FFTW) # download + build fftw
 	set(FFTW_NAME_L fftwl)
 
 	# URL to fetch FFTW source from
-	set(FFTW_URL "http://www.fftw.org/fftw-${FFTW_VER}.tar.gz")
+	set(FFTW_URL "https://www.fftw.org/fftw-${FFTW_VER}.tar.gz")
 
 	# name of file to save fetched source as
 	set(FFTW_SAVE "fftw-${FFTW_VER}.tar.gz")
@@ -102,7 +102,7 @@ if(EMSPHINX_BUILD_FFTW) # download + build fftw
 	# build float fftw if needed
 	if(${EMSPHINX_FFTW_F})
 		ExternalProject_add(${FFTW_NAME_F} PREFIX ${FFTW_NAME_F} URL ${FFTW_URL} DOWNLOAD_NAME ${FFTW_SAVE}
-			CMAKE_ARGS ${FFTW_OPTIONS} ${FFTW_SIMD} -DCMAKE_INSTALL_PREFIX=${FFTW_BUILD_DIR_F}/install -DENABLE_FLOAT=ON # agruments for ccmake
+			CMAKE_ARGS ${FFTW_OPTIONS} ${FFTW_SIMD} -DCMAKE_INSTALL_PREFIX=${FFTW_BUILD_DIR_F}/install -DENABLE_FLOAT=ON -DCMAKE_POLICY_VERSION_MINIMUM=3.5
 			BUILD_COMMAND ${CMAKE_COMMAND} --build . --parallel ${NCORES}
 		)
 		if(EMSPHINX_BUILD_SHARED) # copy shared library to binary directory if needed
@@ -117,7 +117,7 @@ if(EMSPHINX_BUILD_FFTW) # download + build fftw
 	# build double fftw if needed
 	if(${EMSPHINX_FFTW_D})
 		ExternalProject_add(${FFTW_NAME_D} PREFIX ${FFTW_NAME_D} URL ${FFTW_URL} DOWNLOAD_NAME ${FFTW_SAVE}
-			CMAKE_ARGS ${FFTW_OPTIONS} ${FFTW_SIMD} -DCMAKE_INSTALL_PREFIX=${FFTW_BUILD_DIR_D}/install # agruments for ccmake
+			CMAKE_ARGS ${FFTW_OPTIONS} ${FFTW_SIMD} -DCMAKE_INSTALL_PREFIX=${FFTW_BUILD_DIR_D}/install -DCMAKE_POLICY_VERSION_MINIMUM=3.5
 			BUILD_COMMAND ${CMAKE_COMMAND} --build . --parallel ${NCORES}
 		)
 		if(EMSPHINX_BUILD_SHARED) # copy shared library to binary directory if needed
@@ -132,7 +132,7 @@ if(EMSPHINX_BUILD_FFTW) # download + build fftw
 	# build long double fftw if needed
 	if(${EMSPHINX_FFTW_L})
 		ExternalProject_add(${FFTW_NAME_L} PREFIX ${FFTW_NAME_L} URL ${FFTW_URL} DOWNLOAD_NAME ${FFTW_SAVE}
-			CMAKE_ARGS ${FFTW_OPTIONS} -DCMAKE_INSTALL_PREFIX=${FFTW_BUILD_DIR_L}/install -DENABLE_LONG_DOUBLE=ON # agruments for ccmake
+			CMAKE_ARGS ${FFTW_OPTIONS} -DCMAKE_INSTALL_PREFIX=${FFTW_BUILD_DIR_L}/install -DENABLE_LONG_DOUBLE=ON -DCMAKE_POLICY_VERSION_MINIMUM=3.5
 			BUILD_COMMAND ${CMAKE_COMMAND} --build . --parallel ${NCORES}
 		)
 		if(EMSPHINX_BUILD_SHARED) # copy shared library to binary directory if needed
@@ -186,7 +186,7 @@ else(EMSPHINX_BUILD_FFTW) # use existing fftw builds
 	endif()
 
 	# find the header
-	find_file(FFTW_HEADER fftw.h "fftw header")
+	find_file(FFTW_HEADER fftw3.h "fftw header")
 	get_filename_component(FFTW_INCLUDE ${FFTW_HEADER} DIRECTORY)
 	include_directories(${FFTW_INCLUDE})
 endif(EMSPHINX_BUILD_FFTW)
