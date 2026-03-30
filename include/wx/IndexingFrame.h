@@ -729,7 +729,13 @@ void IndexingFrame::startIdx() {
 				evt.SetInt(IdxCmplt);
 				wxPostEvent(this, evt);//post actual completion message
 				return;
-			 } catch (std::exception& e) {//clear items and post
+			 } catch (H5::Exception& e) {//HDF5 exceptions don't inherit from std::exception
+				pool.clear();
+				std::string msg = "HDF5 error during save: " + std::string(e.getCDetailMsg());
+				evt.SetString(msg);
+				evt.SetInt(IdxError);
+				wxPostEvent(this, evt);
+			} catch (std::exception& e) {//clear items and post
 				pool.clear();//clear all unstarted items
 				//post error message
 				evt.SetString(e.what());
@@ -737,6 +743,12 @@ void IndexingFrame::startIdx() {
 				wxPostEvent(this, evt);
 			}
 			//pool goes out of scope here (waiting for completion)
+		} catch (H5::Exception& e) {
+			//post HDF5 error message
+			std::string msg = "HDF5 error: " + std::string(e.getCDetailMsg());
+			evt.SetString(msg);
+			evt.SetInt(IdxError);
+			wxPostEvent(this, evt);
 		} catch (std::exception& e) {
 			//post error message
 			evt.SetString(e.what());
