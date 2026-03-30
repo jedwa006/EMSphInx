@@ -176,7 +176,7 @@ void MasterPatternSelectPanel::KnownChecked( wxListEvent& event ) {
 //@brief: search for new master pattern files
 void MasterPatternSelectPanel::BrowseClicked  ( wxCommandEvent& event ) {
 	//browse for file
-	wxFileDialog openFileDlg(this, _("Add Master Pattern File"), wxEmptyString, wxEmptyString, "SHT files (*.sht)|*.sht", wxFD_OPEN|wxFD_FILE_MUST_EXIST);
+	wxFileDialog openFileDlg(wxGetTopLevelParent(this), _("Add Master Pattern File"), wxEmptyString, wxEmptyString, "SHT files (*.sht)|*.sht", wxFD_OPEN|wxFD_FILE_MUST_EXIST);
 	if(openFileDlg.ShowModal() == wxID_CANCEL) return;
 
 	//do the file loading
@@ -193,7 +193,7 @@ void MasterPatternSelectPanel::BrowseClicked  ( wxCommandEvent& event ) {
 //@brief: add a folder of files to the bottom box
 void MasterPatternSelectPanel::DirClicked     ( wxCommandEvent& event ) {
 	//browse for folder
-	wxDirDialog openDirDlg(this, _("Add Master Pattern Folder"), wxEmptyString, wxDD_DIR_MUST_EXIST);
+	wxDirDialog openDirDlg(wxGetTopLevelParent(this), _("Add Master Pattern Folder"), wxEmptyString, wxDD_DIR_MUST_EXIST);
 	if(openDirDlg.ShowModal() == wxID_CANCEL) return;
 
 	//get list of sht files and convert to vector<wxString>

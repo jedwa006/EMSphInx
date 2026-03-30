@@ -393,8 +393,6 @@ PatternLoadPanelBase::~PatternLoadPanelBase() {
 
 void PatternLoadPanelBase::BrowseClicked( wxCommandEvent& event ) {
 	wxString wildCards = wxT("EBSD Pattern Files (*.h5, *.upx, *.ebsp, or *.data)|*.h5;*.hdf;*.hdf5;*.up1;*.up2;*.ebsp;*.data");
-	// Use GetTopLevelParent() as dialog parent to avoid macOS Cocoa NSOpenPanel modal loop bug
-	// (wxGenericFileButton/wxFilePickerCtrl breaks inside nested widget hierarchies on macOS Tahoe)
 	wxFileDialog dlg(wxGetTopLevelParent(this), wxT("Select a file"), wxEmptyString, wxEmptyString, wildCards, wxFD_OPEN|wxFD_FILE_MUST_EXIST);
 	if(dlg.ShowModal() == wxID_OK) {
 		m_fileText->SetValue(dlg.GetPath());
