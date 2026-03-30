@@ -186,7 +186,7 @@ else(EMSPHINX_BUILD_FFTW) # use existing fftw builds
 	endif()
 
 	# find the header
-	find_file(FFTW_HEADER fftw.h "fftw header")
+	find_file(FFTW_HEADER fftw3.h PATHS /opt/homebrew/include /usr/local/include DOC "fftw header")
 	get_filename_component(FFTW_INCLUDE ${FFTW_HEADER} DIRECTORY)
 	include_directories(${FFTW_INCLUDE})
 endif(EMSPHINX_BUILD_FFTW)

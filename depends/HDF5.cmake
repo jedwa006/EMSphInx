@@ -99,24 +99,28 @@ if(EMSPHINX_BUILD_HDF5)
 	endif()
 
 else(EMSPHINX_BUILD_HDF5)
-	find_package(HDF5 REQUIRED COMPONENTS CXX PATHS "${HDF5_ROOT}") # search for HDF5
+	# Try find_package first (works well on most systems with modern CMake)
+	find_package(HDF5 COMPONENTS CXX PATHS "${HDF5_ROOT}")
 	if(HDF5_FOUND) # hdf5 was found automatically
-		include_directories(${HDF5_INCLUDE_DIR}) # include hdf5 headers
+		include_directories(${HDF5_INCLUDE_DIRS}) # include hdf5 headers (note: INCLUDE_DIRS not INCLUDE_DIR for modern HDF5)
 
-		#should be able to just use find package but it seems to be broken so I'll manually find libraries instead
-		if("${HDF5_LIBRARIES}" STREQUAL "") # did find_package actually get HDF5_LIBRARIES?
-			get_filename_component(HDF5_ROOT "${HDF5_INCLUDE_DIR}" DIRECTORY CACHE PATH) # parent of include directory
-			find_library(HDF5_C_LIBRARIES hdf5-shared PATH "${HDF5_ROOT}/lib") # prefer shared libraries
-			find_library(HDF5_CXX_LIBRARIES hdf5_cpp-shared PATH "${HDF5_ROOT}/lib") # prefer shared libraries
-			if(NOT ${HDF5_C_LIBRARIES})
-				find_library(HDF5_C_LIBRARIES hdf5-static PATH "${HDF5_ROOT}/lib") # fall back to static libraries
-			endif()
-			if(NOT ${HDF5_CXX_LIBRARIES})
-				find_library(HDF5_CXX_LIBRARIES hdf5_cpp-static PATH "${HDF5_ROOT}/lib") # fall back to static libraries
-			endif()
-			set(HDF5_LIBRARIES ${HDF5_C_LIBRARIES} ${HDF5_CXX_LIBRARIES})
+		# find_package may populate HDF5_LIBRARIES, or we may need to find them manually
+		if("${HDF5_LIBRARIES}" STREQUAL "")
+			# Modern Homebrew/system HDF5 uses plain names without -shared/-static suffix
+			find_library(HDF5_C_LIBRARIES NAMES hdf5 hdf5-shared hdf5-static PATHS /opt/homebrew/lib /usr/local/lib)
+			find_library(HDF5_CXX_LIBRARIES NAMES hdf5_cpp hdf5_cpp-shared hdf5_cpp-static PATHS /opt/homebrew/lib /usr/local/lib)
+			set(HDF5_LIBRARIES ${HDF5_CXX_LIBRARIES} ${HDF5_C_LIBRARIES})
 		endif()
-	else(HDF5_FOUND) # hdf5 wasn't found automatically
-		message(FATAL_ERROR "This project requires HDF5 configured with CMake, try setting the HDF5_ROOT variable")
+	else(HDF5_FOUND) # hdf5 wasn't found automatically, try manual detection
+		# Look for headers
+		find_path(HDF5_INCLUDE_DIR H5Cpp.h PATHS /opt/homebrew/include /usr/local/include)
+		if(HDF5_INCLUDE_DIR)
+			include_directories(${HDF5_INCLUDE_DIR})
+			find_library(HDF5_C_LIBRARIES NAMES hdf5 PATHS /opt/homebrew/lib /usr/local/lib)
+			find_library(HDF5_CXX_LIBRARIES NAMES hdf5_cpp PATHS /opt/homebrew/lib /usr/local/lib)
+			set(HDF5_LIBRARIES ${HDF5_CXX_LIBRARIES} ${HDF5_C_LIBRARIES})
+		else()
+			message(FATAL_ERROR "This project requires HDF5 configured with CMake, try setting the HDF5_ROOT variable or installing via Homebrew")
+		endif()
 	endif(HDF5_FOUND)
 endif(EMSPHINX_BUILD_HDF5)
