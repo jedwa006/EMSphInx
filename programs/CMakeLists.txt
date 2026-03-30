@@ -49,6 +49,8 @@ install(TARGETS IndexEBSD MasterXcorr mp2sht sht2png ShtWisdom COMPONENT clt DES
 if(${EMSPHINX_BUILD_GUIS})
 
 	set(MACOSX_BUNDLE_ICON_FILE sphinx.icns) # add icon to Info.plist
+	set(MACOSX_BUNDLE_GUI_IDENTIFIER "org.emsoft.emsphinx.ebsd") # required for macOS file dialogs
+	set(MACOSX_BUNDLE_BUNDLE_NAME "EMSphInxEBSD")
 	set(SPHINX_ICON ${CMAKE_SOURCE_DIR}/icons/sphinx.icns) # location of icon file in source
 	set_source_files_properties(${SPHINX_ICON} PROPERTIES MACOSX_PACKAGE_LOCATION "Resources") # copy the icon file to the Resources folder of the bundle
 

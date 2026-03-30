@@ -156,7 +156,8 @@ void ValidityWizard::AddPage(ValidityPanel* panel) {
 
 ValidityWizard::ValidityWizard( wxWindow* parent, wxWindowID id, const wxString& title, const wxPoint& pos) : wxFrame( parent, id, title, pos, wxSize( 325,350 ), wxCAPTION|wxCLOSE_BOX|wxSYSTEM_MENU|wxTAB_TRAVERSAL )
 {
-	if(NULL != parent) parent->Enable(false);//approximate modal behavoir
+	// Note: parent->Enable(false) was removed -- disabling the parent window
+	// blocks child file dialogs (NSOpenPanel/NSSavePanel) on modern macOS.
 
 	this->SetSizeHints( wxDefaultSize, wxDefaultSize );
 
@@ -223,7 +224,7 @@ ValidityWizard::ValidityWizard( wxWindow* parent, wxWindowID id, const wxString&
 
 ValidityWizard::~ValidityWizard()
 {
-	if(NULL != m_parent) m_parent->Enable(true);//approximate modal behavoir
+	// parent re-enable removed (see constructor comment)
 
 	// Disconnect Events
 	m_book->Disconnect( wxEVT_COMMAND_BOOKCTRL_PAGE_CHANGED, wxBookCtrlEventHandler( ValidityWizard::PageChanged ), NULL, this );
