@@ -610,7 +610,7 @@ namespace emsphinx {
 			H5::H5File file = H5::H5File(name, H5F_ACC_RDONLY);//open the file
 			int idx = 0;
 			int pad = -1;//1 for "Manufacturer", 2 for " Manufacturer", 0 for nothing
-			file.iterateElems(".", &idx, [](int, const char* nm, void* pPad)->int{
+			file.iterateElems(".", &idx, [](hid_t, const char* nm, void* pPad)->herr_t{
 				if(std::string("Manufacturer") == nm) {
 					*(int*)pPad = 0;//save type
 					return 1;//non zero -> stop searching

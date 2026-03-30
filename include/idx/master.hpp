@@ -279,7 +279,7 @@ namespace emsphinx {
 
 		//check if we're in an EBSD or ECP file
 		int type = 0, idx = 0;
-		file.openGroup("EMData").iterateElems(".", &idx, [](int, const char* nm, void* pT)->int{
+		file.openGroup("EMData").iterateElems(".", &idx, [](hid_t, const char* nm, void* pT)->herr_t{
 			if(0 == std::string("EBSDmaster").compare(nm)) *(int*)pT = 1;
 			if(0 == std::string("ECPmaster" ).compare(nm)) *(int*)pT = 2;
 			return 0;

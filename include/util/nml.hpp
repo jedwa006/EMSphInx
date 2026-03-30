@@ -531,9 +531,9 @@ namespace nml {
 					
 					case Type::Bool  : {
 						std::vector<bool       > vBool = getBools  (iter->first);
-						std::vector<hbool_t    > vals(vBool.begin(), vBool.end());
+						std::vector<unsigned char> vals(vBool.begin(), vBool.end()); // can't use hbool_t (== bool in HDF5 2.x) since vector<bool> has no .data()
 						hsize_t dims[1] = {vals.size()};
-						grp.createDataSet(iter->first, H5::PredType::NATIVE_HBOOL   , H5::DataSpace(1, dims)).write(vals.data(), H5::PredType::NATIVE_HBOOL  );
+						grp.createDataSet(iter->first, H5::PredType::NATIVE_UINT8   , H5::DataSpace(1, dims)).write(vals.data(), H5::PredType::NATIVE_UINT8  );
 					} break;
 
 					case Type::Int   : {

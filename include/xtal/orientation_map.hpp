@@ -475,7 +475,7 @@ namespace xtal {
 			H5::H5File file(fileName.c_str(), H5F_ACC_RDONLY);
 			int idx = 0;
 			bool exists = false;
-			file.iterateElems(".", &idx, [](int, const char* nm, void* pB)->int{
+			file.iterateElems(".", &idx, [](hid_t, const char* nm, void* pB)->herr_t{
 				if(0 == std::string("EMheader").compare(nm)) *(bool*)pB = true;
 				return 0;
 			}, &exists);
