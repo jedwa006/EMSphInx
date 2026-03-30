@@ -282,8 +282,12 @@ namespace fft {
 	#ifdef EM_USE_F
 		template <> void Wisdom<     float >::IllegalInstructionHandler(int sig) {
 			if(SIGILL == sig) {
+				// delete the stale wisdom file and warn instead of crashing
 				const std::string fileName = getSharedDataDir() + "fftwf.wisdom";
-				throw std::runtime_error("illegal instruction while reading wisdom from " + fileName + ", try deleting wisdom file");
+				std::remove(fileName.c_str());
+				std::cerr << "warning: illegal instruction from stale FFTW wisdom, deleted " << fileName << '\n';
+				signal(SIGILL, SIG_DFL);
+				return; // let execution continue (wisdom will be regenerated)
 			}
 			exit(sig);
 		}
@@ -292,7 +296,10 @@ namespace fft {
 		template <> void Wisdom<     double>::IllegalInstructionHandler(int sig) {
 			if(SIGILL == sig) {
 				const std::string fileName = getSharedDataDir() + "fftw.wisdom";
-				throw std::runtime_error("illegal instruction while reading wisdom from " + fileName + ", try deleting wisdom file");
+				std::remove(fileName.c_str());
+				std::cerr << "warning: illegal instruction from stale FFTW wisdom, deleted " << fileName << '\n';
+				signal(SIGILL, SIG_DFL);
+				return;
 			}
 			exit(sig);
 		}
@@ -301,7 +308,10 @@ namespace fft {
 		template <> void Wisdom<long double>::IllegalInstructionHandler(int sig) {
 			if(SIGILL == sig) {
 				const std::string fileName = getSharedDataDir() + "fftwl.wisdom";
-				throw std::runtime_error("illegal instruction while reading wisdom from " + fileName + ", try deleting wisdom file");
+				std::remove(fileName.c_str());
+				std::cerr << "warning: illegal instruction from stale FFTW wisdom, deleted " << fileName << '\n';
+				signal(SIGILL, SIG_DFL);
+				return;
 			}
 			exit(sig);
 		}
@@ -323,7 +333,10 @@ namespace fft {
 				signal(SIGILL, &Wisdom<     float >::IllegalInstructionHandler);//switch to custom illegal instruction handler
 				const bool imported = fftwf_import_wisdom_from_filename(fileName.c_str());//try to read wisdom
 				signal(SIGILL, SIG_DFL);//switch back to default illegal instruction handler
-				if(!imported) throw std::runtime_error("failed to read wisdom from " + fileName + ", try deleting wisdom file");
+				if(!imported) {
+					std::cerr << "warning: stale/incompatible wisdom file " << fileName << ", deleting and continuing\n";
+					std::remove(fileName.c_str());
+				}
 			}
 		}
 	#endif
@@ -334,7 +347,10 @@ namespace fft {
 				signal(SIGILL, &Wisdom<     double>::IllegalInstructionHandler);//switch to custom illegal instruction handler
 				const bool imported = fftw_import_wisdom_from_filename (fileName.c_str());//try to read wisdom
 				signal(SIGILL, SIG_DFL);//switch back to default illegal instruction handler
-				if(!imported) throw std::runtime_error("failed to read wisdom from " + fileName + ", try deleting wisdom file");
+				if(!imported) {
+					std::cerr << "warning: stale/incompatible wisdom file " << fileName << ", deleting and continuing\n";
+					std::remove(fileName.c_str());
+				}
 			}
 		}
 	#endif
@@ -345,7 +361,10 @@ namespace fft {
 				signal(SIGILL, &Wisdom<long double>::IllegalInstructionHandler);//switch to custom illegal instruction handler
 				const bool imported = fftwl_import_wisdom_from_filename(fileName.c_str());//try to read wisdom
 				signal(SIGILL, SIG_DFL);//switch back to default illegal instruction handler
-				if(!imported) throw std::runtime_error("failed to read wisdom from " + fileName + ", try deleting wisdom file");
+				if(!imported) {
+					std::cerr << "warning: stale/incompatible wisdom file " << fileName << ", deleting and continuing\n";
+					std::remove(fileName.c_str());
+				}
 			}
 		}
 	#endif
